@@ -1,0 +1,67 @@
+Devvortex
+
+#1 Lo primero de todos es mirar si tenemos conextividad con la máquina
+#atacante (target). Si el ttl es (64) o cerca de él, no más, es una 
+#máquina Linux. Si es (128) o cerca, Windows. En este caso es 63, por lo
+#que es una máquina Linux
+
+ping 10.10.11.242
+PING 10.10.11.242 (10.10.11.242) 56(84) bytes of data.
+64 bytes from 10.10.11.242: icmp_seq=1 ttl=63 time=66.3 ms
+
+--- 10.10.11.242 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 66.348/66.348/66.348/0.000 ms
+
+
+#2  Ahora lo siguiente que podemos hacer es escanear los puertos que tenemos
+#abiertos, por tanto con nmap podemos hacer.
+#Ahora lo podemos guardar en un archivo grepeable si queremos para #recordarlos. Para ello hacemos un:
+
+nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.11.242 -oG allPorts 
+
+#-sS para que sea un escaneo rápido.
+#--min-rate 5000 un ratio mínimo no más lento de 5000 paquetes por segundo.
+#-vvv Triple verbose para mostrar más detalles por consola
+#-Pn para evitar descrubrimiento de hosts
+-oG allPorts guardar escáneo en formato grepeable.
+
+#Este es el resultado.
+# Nmap 7.94SVN scan initiated Sat Mar  2 17:28:25 2024 as: nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn -oG allPorts 10.10.11.242
+   2   │ # Ports scanned: TCP(65535;1-65535) UDP(0;) SCTP(0;) PROTOCOLS(0;)
+   3   │ Host: 10.10.11.242 ()   Status: Up
+   4   │ Host: 10.10.11.242 ()   Ports: 22/open/tcp//ssh///, 80/open/tcp//http///
+   5   │ # Nmap done at Sat Mar  2 17:28:48 2024 -- 1 IP address (1 host up) scanned in 22.60 seconds
+
+#Ahora que sabemos que los puertos 22 y 80 están abiertos, sabemos que el puerto HTTP está abierto, por lo tanto podemos entrar por ahí.
+#Ahora podemos saber que lleva la página web, en este caso, para ello hacemos un:
+
+whatweb http://10.10.11.242
+
+#Este es el resultado
+
+http://10.10.11.242 [302 Found] Country[RESERVED][ZZ], HTTPServer[Ubuntu Linux][nginx/1.18.0 (Ubuntu)], IP[10.10.11.242], RedirectLocation[http://devvortex.htb/], Title[302 Found], nginx[1.18.0]
+http://devvortex.htb/ [200 OK] Bootstrap, Country[RESERVED][ZZ], Email[info@DevVortex.htb], HTML5, HTTPServer[Ubuntu Linux][nginx/1.18.0 (Ubuntu)], IP[10.10.11.242], JQuery[3.4.1], Script[text/javascript], Title[DevVortex], X-UA-Compatible[IE=edge], nginx[1.18.0]
+
+#Para poder buscar la página deberemos ponerla en el archivo /etc/hosts, para que pueda resolver
+127.0.0.1       localhost
+127.0.1.1       alv4ro
+10.10.11.242    devvortex.htb
+10.10.11.242    dev.devvortex.htb
+# The following lines are desirable for IPv6 capable hosts
+::1     localhost ip6-localhost ip6-loopback
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+
+#El dev.devvortex.htb se pone después, porque es un subdominio que tenemos que encontrar
+#Ahora podemos buscar con un ataque de diccionario, todos los directorios que tiene, para ello podemos hacer:
+
+gobuster dir -u http://devvortex.htb/ -w /home/alv4ro/SecLists/Discovery/Web-Content/directory-list-2.3-medium.txt
+
+
+
+
+
+
+
+
